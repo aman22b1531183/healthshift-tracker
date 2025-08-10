@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(CAREWORKER)
+  auth0Id   String   @unique @map("auth0_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  shifts              ShiftRecord[]
+  createdPerimeters   LocationPerimeter[] @relation("CreatedPerimeters")
+
+  @@map("users")
+}
+
+model ShiftRecord {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  clockInTime       DateTime  @default(now()) @map("clock_in_time")
+  clockInLatitude   Float     @map("clock_in_latitude")
+  clockInLongitude  Float     @map("clock_in_longitude")
+  clockInNote       String?   @map("clock_in_note")
+  clockOutTime      DateTime? @map("clock_out_time")
+  clockOutLatitude  Float?    @map("clock_out_latitude")
+  clockOutLongitude Float?    @map("clock_out_longitude")
+  clockOutNote      String?   @map("clock_out_note")
+  durationMinutes   Int?      @map("duration_minutes")
+  status            ShiftStatus @default(ACTIVE)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("shift_records")
+}
+
+model LocationPerimeter {
+  id              String   @id @default(cuid())
+  name            String
+  centerLatitude  Float    @map("center_latitude")
+  centerLongitude Float    @map("center_longitude")
+  radiusKm        Float    @default(2.0) @map("radius_km")
+  createdBy       String   @map("created_by")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creator User @relation("CreatedPerimeters", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("location_perimeters")
+}
+
+enum Role {
+  MANAGER
+  CAREWORKER
+}
+
+enum ShiftStatus {
+  ACTIVE
+  COMPLETED
+}
