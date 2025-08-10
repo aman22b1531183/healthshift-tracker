@@ -1,5 +1,5 @@
 // File: backend/src/routes/locations.ts
-// CORRECTED VERSION
+// FINAL ROBUST VERSION
 
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -8,45 +8,36 @@ import { body, validationResult } from 'express-validator';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Get all active perimeters
 router.get('/perimeters', async (req: Request, res: Response) => {
   try {
     const perimeters = await prisma.locationPerimeter.findMany({
       where: { isActive: true },
       include: { creator: { select: { name: true } } }
     });
-
-    res.json(perimeters);
+    return res.json(perimeters);
   } catch (error) {
     console.error('Get perimeters error:', error);
-    res.status(500).json({ error: 'Failed to get location perimeters' });
+    return res.status(500).json({ error: 'Failed to get location perimeters' });
   }
 });
 
-// Get all perimeters (managers only)
 router.get('/perimeters/all', async (req: Request, res: Response) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { auth0Id: req.user?.sub }
-    });
-
-    if (!user || user.role !== 'MANAGER') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
+    if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
     const perimeters = await prisma.locationPerimeter.findMany({
       include: { creator: { select: { name: true } } },
       orderBy: { createdAt: 'desc' }
     });
-
-    res.json(perimeters);
+    return res.json(perimeters);
   } catch (error) {
     console.error('Get all perimeters error:', error);
-    res.status(500).json({ error: 'Failed to get perimeters' });
+    return res.status(500).json({ error: 'Failed to get perimeters' });
   }
 });
 
-// Create perimeter (managers only)
 router.post('/perimeters', [
   body('name').isString().trim().isLength({ min: 1 }),
   body('centerLatitude').isFloat({ min: -90, max: 90 }),
@@ -56,40 +47,24 @@ router.post('/perimeters', [
 ], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
+    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
-    const user = await prisma.user.findUnique({
-      where: { auth0Id: req.user?.sub }
-    });
-
-    if (!user || user.role !== 'MANAGER') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
+    if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
     const { name, centerLatitude, centerLongitude, radiusKm, isActive = true } = req.body;
-
     const perimeter = await prisma.locationPerimeter.create({
-      data: {
-        name,
-        centerLatitude,
-        centerLongitude,
-        radiusKm,
-        isActive,
-        createdBy: user.id
-      },
+      data: { name, centerLatitude, centerLongitude, radiusKm, isActive, createdBy: user.id },
       include: { creator: { select: { name: true } } }
     });
-
-    res.status(201).json(perimeter);
+    return res.status(201).json(perimeter);
   } catch (error) {
     console.error('Create perimeter error:', error);
-    res.status(500).json({ error: 'Failed to create perimeter' });
+    return res.status(500).json({ error: 'Failed to create perimeter' });
   }
 });
 
-// Update perimeter (managers only)
 router.patch('/perimeters/:id', [
   body('name').optional().isString().trim().isLength({ min: 1 }),
   body('centerLatitude').optional().isFloat({ min: -90, max: 90 }),
@@ -99,31 +74,25 @@ router.patch('/perimeters/:id', [
 ], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
+    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
-    const user = await prisma.user.findUnique({
-      where: { auth0Id: req.user?.sub }
-    });
-
-    if (!user || user.role !== 'MANAGER') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
+    if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
     const { id } = req.params;
-    const updateData = req.body;
+    if (!id) { return res.status(400).json({ error: 'Perimeter ID is required.' }); }
 
+    const updateData = req.body;
     const perimeter = await prisma.locationPerimeter.update({
       where: { id },
       data: updateData,
       include: { creator: { select: { name: true } } }
     });
-
-    res.json(perimeter);
+    return res.json(perimeter);
   } catch (error) {
     console.error('Update perimeter error:', error);
-    res.status(500).json({ error: 'Failed to update perimeter' });
+    return res.status(500).json({ error: 'Failed to update perimeter' });
   }
 });
 

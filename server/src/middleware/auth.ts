@@ -1,5 +1,5 @@
 // File: backend/src/middleware/auth.ts
-// FINAL CLEAN VERSION
+// FINAL ROBUST VERSION
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
@@ -19,7 +19,9 @@ function getKey(header: any, callback: any) {
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) { return res.status(401).json({ error: 'No token provided' }); }
+  if (!token) { 
+    return res.status(401).json({ error: 'No token provided' }); 
+  }
 
   const options = {
     audience: process.env.AUTH0_AUDIENCE,
@@ -40,6 +42,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       name: decoded[`${apiAudience}/name`]
     };
 
-    next();
+    return next();
   });
 };

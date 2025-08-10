@@ -1,5 +1,5 @@
 // File: backend/src/routes/dashboard.ts
-// CORRECTED VERSION
+// FINAL ROBUST VERSION
 
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -7,59 +7,37 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Get dashboard statistics (managers only)
 router.get('/stats', async (req: Request, res: Response) => {
   try {
+    if (!req.user?.sub) {
+      return res.status(401).json({ error: 'Authentication failed.' });
+    }
     const user = await prisma.user.findUnique({
-      // Added optional chaining for type safety
-      where: { auth0Id: req.user?.sub }
+      where: { auth0Id: req.user.sub }
     });
 
     if (!user || user.role !== 'MANAGER') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Get date ranges
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Get completed shifts from last week
     const completedShifts = await prisma.shiftRecord.findMany({
       where: {
         status: 'COMPLETED',
-        clockInTime: {
-          gte: oneWeekAgo
-        }
+        clockInTime: { gte: oneWeekAgo }
       },
       include: { user: true }
     });
 
-    // Calculate average hours per day
-    const totalHours = completedShifts.reduce((sum, shift) => 
-      sum + (shift.durationMinutes || 0), 0) / 60;
+    const totalHours = completedShifts.reduce((sum, shift) => sum + (shift.durationMinutes || 0), 0) / 60;
     const avgHoursPerDay = completedShifts.length > 0 ? totalHours / 7 : 0;
+    const todayShifts = await prisma.shiftRecord.count({ where: { clockInTime: { gte: today } } });
+    const activeShiftsCount = await prisma.shiftRecord.count({ where: { status: 'ACTIVE' } });
+    const totalStaff = await prisma.user.count({ where: { role: 'CAREWORKER' } });
 
-    // Count today's clock-ins
-    const todayShifts = await prisma.shiftRecord.count({
-      where: {
-        clockInTime: {
-          gte: today
-        }
-      }
-    });
-
-    // Get active shifts count
-    const activeShiftsCount = await prisma.shiftRecord.count({
-      where: { status: 'ACTIVE' }
-    });
-
-    // Get total staff count
-    const totalStaff = await prisma.user.count({
-      where: { role: 'CAREWORKER' }
-    });
-
-    // Weekly hours by staff
     const weeklyHoursByStaff: { [userId: string]: number } = {};
     completedShifts.forEach(shift => {
       if (!weeklyHoursByStaff[shift.userId]) {
@@ -76,10 +54,10 @@ router.get('/stats', async (req: Request, res: Response) => {
       totalStaff
     };
 
-    res.json(stats);
+    return res.json(stats);
   } catch (error) {
     console.error('Dashboard stats error:', error);
-    res.status(500).json({ error: 'Failed to get dashboard statistics' });
+    return res.status(500).json({ error: 'Failed to get dashboard statistics' });
   }
 });
 
