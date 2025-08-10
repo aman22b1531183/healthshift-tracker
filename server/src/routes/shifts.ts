@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 router.get('/my-shifts', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user) { return res.status(404).json({ error: 'User not found' }); }
 
@@ -28,7 +28,7 @@ router.get('/my-shifts', async (req: Request, res: Response) => {
 
 router.get('/all', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
@@ -45,7 +45,7 @@ router.get('/all', async (req: Request, res: Response) => {
 
 router.get('/active', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
@@ -69,7 +69,7 @@ router.post('/clock-in', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user) { return res.status(404).json({ error: 'User not found' }); }
@@ -105,7 +105,7 @@ router.patch('/clock-out/:shiftId', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
     const { shiftId } = req.params;
     if (!shiftId) { return res.status(400).json({ error: 'Shift ID is required in the URL.' }); }

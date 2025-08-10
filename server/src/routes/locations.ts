@@ -23,7 +23,7 @@ router.get('/perimeters', async (req: Request, res: Response) => {
 
 router.get('/perimeters/all', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
 
@@ -48,7 +48,7 @@ router.post('/perimeters', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }
@@ -75,7 +75,7 @@ router.patch('/perimeters/:id', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
-    if (!req.user?.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
+    if (!req.user || !req.user.sub) { return res.status(401).json({ error: 'Authentication failed.' }); }
 
     const user = await prisma.user.findUnique({ where: { auth0Id: req.user.sub } });
     if (!user || user.role !== 'MANAGER') { return res.status(403).json({ error: 'Access denied' }); }

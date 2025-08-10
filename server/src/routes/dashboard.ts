@@ -1,5 +1,5 @@
 // File: backend/src/routes/dashboard.ts
-// FINAL CORRECTED VERSION
+// FINAL ROBUST VERSION
 
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -9,12 +9,11 @@ const prisma = new PrismaClient();
 
 router.get('/stats', async (req: Request, res: Response) => {
   try {
-    // --- THIS CHECK IS NOW MORE EXPLICIT ---
     if (!req.user || !req.user.sub) {
       return res.status(401).json({ error: 'Authentication failed.' });
     }
     const user = await prisma.user.findUnique({
-      where: { auth0Id: req.user.sub } // TypeScript is now certain req.user exists
+      where: { auth0Id: req.user.sub }
     });
 
     if (!user || user.role !== 'MANAGER') {

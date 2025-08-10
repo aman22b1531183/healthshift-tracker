@@ -8,7 +8,7 @@ export const errorHandler = (
   req: Request,
   res: Response,
   next: NextFunction
-): void => { // Explicitly state that this function doesn't return a value
+): void => {
   console.error('Error:', error);
 
   if (error.code === 'P2002') {

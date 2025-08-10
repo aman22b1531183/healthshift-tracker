@@ -45,7 +45,7 @@ router.post('/profile', authMiddleware, async (req: Request, res: Response) => {
 });
 
 router.get('/users', authMiddleware, async (req: Request, res: Response) => {
-    if (!req.user?.sub) {
+    if (!req.user || !req.user.sub) {
       return res.status(401).json({ error: 'Authentication failed.' });
     }
     const requestingUser = await prisma.user.findUnique({ where: { auth0Id: req.user.sub }});
@@ -59,7 +59,7 @@ router.get('/users', authMiddleware, async (req: Request, res: Response) => {
 });
 
 router.patch('/users/:userId/role', authMiddleware, async (req: Request, res: Response) => {
-    if (!req.user?.sub) {
+    if (!req.user || !req.user.sub) {
       return res.status(401).json({ error: 'Authentication failed.' });
     }
     const requestingUser = await prisma.user.findUnique({ where: { auth0Id: req.user.sub }});
@@ -67,10 +67,10 @@ router.patch('/users/:userId/role', authMiddleware, async (req: Request, res: Re
         return res.status(403).json({ error: 'Access denied.' });
     }
     const { userId } = req.params;
-    const { role } = req.body;
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required.' });
     }
+    const { role } = req.body;
     if (role !== 'MANAGER' && role !== 'CAREWORKER') {
         return res.status(400).json({ error: 'Invalid role specified.' });
     }
