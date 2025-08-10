@@ -1,5 +1,5 @@
 // File: backend/src/middleware/auth.ts
-// FINAL CORRECTED VERSION
+// CORRECTED VERSION
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
@@ -42,7 +42,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       name: decoded[`${apiAudience}/name`]
     };
 
-    // --- THIS LINE IS CORRECTED ---
+    // This line is corrected to explicitly return
     return next();
   });
 };
