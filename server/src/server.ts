@@ -1,11 +1,8 @@
 // File: backend/src/server.ts
-// FINAL CORRECTED VERSION
 
-// Load environment variables from .env file BEFORE anything else.
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Now, import the rest of the modules
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -19,12 +16,23 @@ import { authMiddleware } from './middleware/auth';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Allowed origins from env
+const allowedOrigins = process.env.FRONTEND_URLS?.split(',') || ['http://localhost:5173'];
+
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow non-browser requests
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
