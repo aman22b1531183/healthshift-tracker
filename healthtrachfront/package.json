@@ -8,12 +8,12 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "dev": "npx vite",
+    "build": "npx tsc && npx vite build",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix",
+    "preview": "npx vite preview",
+    "type-check": "npx tsc --noEmit"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",

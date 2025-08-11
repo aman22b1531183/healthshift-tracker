@@ -1,6 +1,11 @@
 {
-  "buildCommand": "npm install && npm run build",
+  "buildCommand": "npm ci && npx vite build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "functions": {
+    "app/**/*.js": {
+      "runtime": "@vercel/node@18"
+    }
+  }
 }
