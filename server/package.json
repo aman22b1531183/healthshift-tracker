@@ -4,14 +4,14 @@
   "description": "Backend API for Healthcare Shift Tracker",
   "main": "dist/server.js",
   "scripts": {
-  "dev": "nodemon --exec ts-node --transpile-only src/server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "db:migrate": "npx prisma migrate dev",
-  "db:deploy": "npx prisma migrate deploy",
-  "db:generate": "npx prisma generate",
-  "db:studio": "npx prisma studio"
-},
+    "dev": "nodemon --exec ts-node --transpile-only src/server.ts",
+    "build": "tsc --noEmitOnError false",
+    "start": "node dist/server.js",
+    "db:migrate": "npx prisma migrate dev",
+    "db:deploy": "npx prisma migrate deploy",
+    "db:generate": "npx prisma generate",
+    "db:studio": "npx prisma studio"
+  },
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "bcryptjs": "^2.4.3",
